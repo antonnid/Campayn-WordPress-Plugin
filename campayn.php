@@ -145,25 +145,51 @@ function campayn_get_form($id,$widget = 0) {
   $ft = get_option('campayn_forms_table');
 
   $f = $wpdb->get_row($wpdb->prepare('select * from '.$ft.' where id = %d',$id));
+
+  $url = preg_replace('/([?&])formError=[^&]+(&|$)/','$1',$_SERVER["REQUEST_URI"]);
+  $url = preg_replace('/([?&])errorReason=[^&]+(&|$)/','$1',$url);
+  $url = preg_replace('/([?&])formSuccess=[^&]+(&|$)/','$1',$url);
+  $url = preg_replace('/([?&])formId=[^&]+(&|$)/','$1',$url);
+
+  if ($widget) {
+    $class  = ' class="widget-title" ';
+  } else {
+    $class = '';
+  }
+/*
+original code
   if (!empty($_SERVER['HTTPS'])) {
     $proto = 'https://';
   } else {
     $proto = 'http://';
   }
   
-  $url = preg_replace('/([?&])formError=[^&]+(&|$)/','$1',$_SERVER["REQUEST_URI"]);
-  $url = preg_replace('/([?&])errorReason=[^&]+(&|$)/','$1',$url);
-  $url = preg_replace('/([?&])formSuccess=[^&]+(&|$)/','$1',$url);
-  $url = preg_replace('/([?&])formId=[^&]+(&|$)/','$1',$url);
-  if ($widget) {
-    $class  = ' class="widget-title" ';
-  } else {
-    $class = '';
-  }
   $form = '<h3 '.$class.'><span>'.$f->form_title.'</span></h3>';
   $form .= str_replace('{redirectUrl}',$proto . $_SERVER["HTTP_HOST"] . $url ,$f->wp_form);
-  return $form;
-} 
+*/
+/*
+  Rewrite action="http://campayn.com/contacts/signup_form_add_contact/"
+    Option 1: post data over protocol used 
+      if (!empty($_SERVER['HTTPS'])) {
+       $proto = 'https://';
+      } else {
+         $proto = 'http://';
+      }
+
+      $form_html = str_replace('http://',$proto,$f->wp_form);
+      $form_html = str_replace('{redirectUrl}',$proto . $_SERVER["HTTP_HOST"] . $url ,$form_html);
+    Option 2: post data over ssl regardless of site's protocol (best option in my opinion)
+    If option 2 is used then $_SERVER['HTTPS'] doesn't need to be checked to set $proto, 
+    and the if-statement can be removed
+      $form_html = str_replace('http://','https://',$f->wp_form);
+      $form_html = str_replace('{redirectUrl}','https://' . $_SERVER["HTTP_HOST"] . $url ,$form_html);
+*/
+ $form_title = '<h3 '.$class.'><span>'.$f->form_title.'</span></h3>';
+ $form_html = str_replace('http://','https://',$f->wp_form);
+ $form_html = str_replace('{redirectUrl}','https://' . $_SERVER["HTTP_HOST"] . $url ,$form_html);
+ $form = $form_title . $form_html;
+ return $form;
+}
 
 // return with either the form or the appropriate thanks/error message in its stead
 function campayn_get_form_message($id,$widget = 0) {
